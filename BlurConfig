@@ -1,0 +1,11 @@
+#ifndef BLURCONFIG_H
+#define BLURCONFIG_H
+
+
+class BlurConfig : public BasePSConfig
+{
+public:
+    BlurConfig();
+};
+
+#endif // BLURCONFIG_H
