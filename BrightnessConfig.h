@@ -13,10 +13,10 @@ public:
     int getSize();
     int write(const char *buf, size_t size, off_t offset);
 
+    double gamma;
+
 private:
     string genStr(double gamma);
-
-    double gamma;
 };
 
 #endif // BRIGHTNESSCONFIG_H

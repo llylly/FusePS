@@ -5,6 +5,10 @@
 #include <sys/stat.h>
 #include <map>
 
+#include <QImage>
+
+#include "Image.h"
+
 #include "BasePSConfig.h"
 #include "ScalingConfig.h"
 #include "BlurConfig.h"
@@ -25,9 +29,10 @@ public:
     int *foldersConfig;
     int configsN;
     char **configsPath;
-    map<string, string> *fileMap;
-
     BasePSConfig **configs;
+    map<string, string> *fileMap;
+    map<string, bool> *baked;
+    int stamp;
 
     PSStatus();
 
@@ -41,10 +46,9 @@ public:
      */
     int initBuffer(int *argc, char **argv[]);
 
-    char *bufferFolder;
+    int work(string path, int typeNo);
 
-private:
-    int stamp;
+    char *bufferFolder;
 };
 
 #endif // PSSTATUS_H

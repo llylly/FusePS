@@ -1,4 +1,4 @@
-QT += core
+QT += core multimedia
 QT -= gui
 
 CONFIG += c++11
@@ -22,7 +22,11 @@ SOURCES += main.cpp \
     BrightnessConfig.cpp \
     BlurConfig.cpp \
     ContrastConfig.cpp \
-    MosaicConfig.cpp
+    MosaicConfig.cpp \
+    Image.cpp \
+    ImageEdit.cpp \
+    Histogram.cpp \
+    Constants.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -44,4 +48,8 @@ HEADERS += \
     BrightnessConfig.h \
     BlurConfig.h \
     ContrastConfig.h \
-    MosaicConfig.h
+    MosaicConfig.h \
+    Image.h \
+    ImageEdit.h \
+    Histogram.h \
+    Constants.h

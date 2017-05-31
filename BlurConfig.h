@@ -16,10 +16,10 @@ public:
     int getSize();
     int write(const char *buf, size_t size, off_t offset);
 
+    int radius;
+
 private:
     string genStr(int radius);
-
-    int radius;
 };
 
 

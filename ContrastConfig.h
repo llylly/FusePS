@@ -18,10 +18,11 @@ public:
     int getSize();
     int write(const char *buf, size_t size, off_t offset);
 
+    int L, R;
+
 private:
     string genStr(int l, int r);
 
-    int L, R;
 };
 
 #endif // CONTRASTCONFIG_H

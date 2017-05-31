@@ -41,7 +41,18 @@ int ps_getattr(const char *path, struct stat *stbuf) {
             return 0;
         }
 
-    /* To be filled: if equals to a img file */
+    for (int i=0; i<status->foldersN; ++i) {
+        if (strstr(path, status->foldersPath[i]) == path) {
+            const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+            if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                string newPath = status->bufferFolder;
+                newPath += "/";
+                newPath += status->fileMap[i][fileName];
+                lstat(newPath.c_str(), stbuf);
+                return 0;
+            }
+        }
+    }
 
     return -ENOENT;
 }
@@ -90,7 +101,18 @@ int ps_chmod(const char *path , mode_t mode) {
 
     int ret = 0;
     if (!reserved) {
-        ret = chmod(path, mode);
+        ret = -ENOENT;
+        for (int i=0; i<status->foldersN; ++i)
+            if (strstr(path, status->foldersPath[i]) == path) {
+                const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+                if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                    string newPath = status->bufferFolder;
+                    newPath += "/";
+                    newPath += status->fileMap[i][fileName];
+                    ret = chmod(newPath.c_str(), mode);
+                    return ret;
+                }
+            }
     }
     return ret;
 }
@@ -111,7 +133,18 @@ int ps_chown(const char *path, uid_t uid, gid_t gid) {
 
     int ret = 0;
     if (!reserved) {
-        ret = chown(path, uid, gid);
+        ret = -ENOENT;
+        for (int i=0; i<status->foldersN; ++i)
+            if (strstr(path, status->foldersPath[i]) == path) {
+                const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+                if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                    string newPath = status->bufferFolder;
+                    newPath += "/";
+                    newPath += status->fileMap[i][fileName];
+                    ret = chown(newPath.c_str(), uid, gid);
+                    return ret;
+                }
+            }
     }
     return ret;
 }
@@ -132,7 +165,18 @@ int ps_truncate(const char *path, off_t offset) {
 
     int ret = 0;
     if (!reserved) {
-        ret = truncate(path, offset);
+        ret = -ENOENT;
+        for (int i=0; i<status->foldersN; ++i)
+            if (strstr(path, status->foldersPath[i]) == path) {
+                const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+                if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                    string newPath = status->bufferFolder;
+                    newPath += "/";
+                    newPath += status->fileMap[i][fileName];
+                    ret = truncate(newPath.c_str(), offset);
+                    return ret;
+                }
+            }
     }
     return ret;
 }
@@ -145,7 +189,20 @@ int ps_open(const char *path, struct fuse_file_info *fi) {
             return 0;
         }
 
-    return -ENOENT;
+    int ret = -ENOENT;
+    for (int i=0; i<status->foldersN; ++i)
+        if (strstr(path, status->foldersPath[i]) == path) {
+            const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+            if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                string newPath = status->bufferFolder;
+                newPath += "/";
+                newPath += status->fileMap[i][fileName];
+                ret = open(newPath.c_str(), O_RDWR);
+                if (ret >= 0) fi->fh = ret, ret = 0;
+                return ret;
+            }
+        }
+    return ret;
 }
 
 int ps_read(const char *path, char *buf, size_t size, off_t offset,
@@ -157,7 +214,20 @@ int ps_read(const char *path, char *buf, size_t size, off_t offset,
             return status->configs[i]->read(buf, size, offset);
         }
 
-    return -ENOENT;
+    int ret = -ENOENT;
+    for (int i=0; i<status->foldersN; ++i)
+        if (strstr(path, status->foldersPath[i]) == path) {
+            const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+            if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                string newPath = status->bufferFolder;
+                newPath += "/";
+                newPath += status->fileMap[i][fileName];
+                lseek(fi->fh, offset, SEEK_SET);
+                ret = read(fi->fh, (void*)buf, size);
+                return ret;
+            }
+        }
+    return ret;
 }
 
 int ps_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
@@ -168,7 +238,20 @@ int ps_write(const char *path, const char *buf, size_t size, off_t offset, struc
             return status->configs[i]->write(buf, size, offset);
         }
 
-    return -ENOENT;
+    int ret = -ENOENT;
+    for (int i=0; i<status->foldersN; ++i)
+        if (strstr(path, status->foldersPath[i]) == path) {
+            const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+            if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))) {
+                string newPath = status->bufferFolder;
+                newPath += "/";
+                newPath += status->fileMap[i][fileName];
+                lseek(fi->fh, offset, SEEK_SET);
+                ret = write(fi->fh, (void*)buf, size);
+                return ret;
+            }
+        }
+    return ret;
 }
 
 int ps_statfs(const char *path, struct statvfs *vfs) {
@@ -204,6 +287,20 @@ int ps_release(const char *path, struct fuse_file_info *fi) {
     int ret = 0;
     if (!reserved) {
         ret = close(fi->fh);
+
+        for (int i=0; i<status->foldersN; ++i)
+            if (strstr(path, status->foldersPath[i]) == path) {
+                const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+                if ((strlen(fileName) > 0) && (status->fileMap[i].count(fileName))
+                        && (!status->baked[i][fileName])) {
+                    string newPath = status->bufferFolder;
+                    newPath += "/";
+                    newPath += status->fileMap[i][fileName];
+                    if (status->work(newPath, i) == 0)
+                        status->baked[i][fileName] = true;
+                    return ret;
+                }
+            }
     }
 
     return ret;
@@ -258,6 +355,17 @@ int ps_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                 nowStat.st_size = status->configs[status->foldersConfig[i]]->getSize();
                 filler(buf, "config.txt", &nowStat, 0);
             }
+
+            map<string, string> *nowMap = &(status->fileMap[i]);
+            for (map<string, string>::iterator ite = nowMap->begin(); ite != nowMap->end(); ++ite) {
+                struct stat nowStat;
+                string newPath = status->bufferFolder;
+                newPath += "/";
+                newPath += ite->second.c_str();
+                lstat(newPath.c_str(), &nowStat);
+                filler(buf, ite->first.c_str(), &nowStat, 0);
+            }
+
             legalDir = true;
         }
     if (legalDir) return 0;
@@ -290,13 +398,45 @@ int ps_create(const char *path , mode_t mode, struct fuse_file_info *fi) {
 
     for (int i=0; i<status->foldersN; ++i)
         if (strstr(path, status->foldersPath[i]) == path) {
-            const char *fileName = path + strlen(status->foldersPath[i]);
+            const char *fileName = path + strlen(status->foldersPath[i]) + 1;
+            int len = strlen(fileName);
+            if (len <= 0) {
+                return -EISDIR;
+            }
+            if (status->fileMap[i].count(fileName) > 0)
+                return -EEXIST;
+            bool ok = true;
+            int dotPos = -1;
+            for (int i=0; i<len; ++i) {
+                if (fileName[i] == '/') ok = false;
+                if (fileName[i] == '.') dotPos = i;
+            }
+            if (dotPos < 0) ok = false;
+            if (fileName[0] == '.') ok = false; // hide file
+            const char *formatName = fileName + dotPos + 1;
+            if (ok) {
+                if ((strcmp(formatName, "bmp") == 0) ||
+                    (strcmp(formatName, "jpg") == 0) ||
+                    (strcmp(formatName, "jpeg") == 0) ||
+                    (strcmp(formatName, "png") == 0)) {
+                    ok = true;
+                } else
+                    ok = false;
+            }
+            if (!ok) return -EPERM;
+
             char *realPlace = new char[100];
-            sprintf(realPlace, "%s%s", status->foldersPath, fileName);
+            sprintf(realPlace, "%s/%d.%s", status->bufferFolder, status->stamp, formatName);
+            char *realFileName = new char[100];
+            sprintf(realFileName, "%d.%s", status->stamp, formatName);
+            ++status->stamp;
+
             if (access(realPlace, F_OK)) {
                 int ret = open(realPlace, (int)mode | O_CREAT);
                 if (ret >= 0) {
                     fi->fh = ret;
+                    status->fileMap[i][fileName] = realFileName;
+                    status->baked[i][fileName] = false;
                     return 0;
                 } else
                     return ret;
@@ -345,9 +485,9 @@ int ps_fallocate(const char *, int, off_t, off_t, struct fuse_file_info *) {
 static struct fuse_operations global_oper = {
     .getattr = ps_getattr,
     //.readlink = ps_readlink,
-    //.mknode
+    //.mknod
     //.mkdir = ps_mkdir,
-    //.unlink = ps_unlink,mk
+    //.unlink = ps_unlink
     //.rmdir = ps_rmdir,
     //.symlink = ps_symlink,
     //.rename = ps_rename,

@@ -20,13 +20,13 @@ public:
     int getSize();
     int write(const char *buf, size_t size, off_t offset);
 
-private:
-    string genStr(SCALE_TYPE type, int absoluteW, int absoluteH,
-                  double ratioW, double ratioH);
-
     SCALE_TYPE type;
     int absoluteW, absoluteH;
     double ratioW, ratioH;
+
+private:
+    string genStr(SCALE_TYPE type, int absoluteW, int absoluteH,
+                  double ratioW, double ratioH);
 };
 
 #endif // SCALINGCONFIG_H
