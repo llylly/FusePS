@@ -31,3 +31,26 @@ struct stat *genPSConfigFileStat() {
     res->st_rdev = bufStat.st_rdev;
     return res;
 }
+
+bool legalImgName(const char *fileName) {
+    bool ok = true;
+    int dotPos = -1;
+    int len = strlen(fileName);
+    for (int i=0; i<len; ++i) {
+        if (fileName[i] == '/') ok = false;
+        if (fileName[i] == '.') dotPos = i;
+    }
+    if (dotPos < 0) ok = false;
+    if (fileName[0] == '.') ok = false; // hide file
+    const char *formatName = fileName + dotPos + 1;
+    if (ok) {
+        if ((strcmp(formatName, "bmp") == 0) ||
+            (strcmp(formatName, "jpg") == 0) ||
+            (strcmp(formatName, "jpeg") == 0) ||
+            (strcmp(formatName, "png") == 0)) {
+            ok = true;
+        } else
+            ok = false;
+    }
+    return ok;
+}

@@ -16,4 +16,6 @@ struct stat *genPSFolderStat();
 
 struct stat *genPSConfigFileStat();
 
+bool legalImgName(const char *fileName);
+
 #endif // TOOL_H

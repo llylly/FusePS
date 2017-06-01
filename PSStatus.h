@@ -5,6 +5,9 @@
 #include <sys/stat.h>
 #include <map>
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <QImage>
 
 #include "Image.h"

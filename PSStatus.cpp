@@ -42,7 +42,15 @@ int PSStatus::initBuffer(int *argc, char **argv[]) {
         strcpy(bufferFolder, (*argv)[place + 1]);
     }
 
-    mkdir(bufferFolder, S_IRWXU | S_IRWXG | S_IRWXO);
+    struct stat buf;
+    int statRet = 0;
+    statRet = lstat(bufferFolder, &buf);
+    if (statRet == 0) {
+        if (!(buf.st_mode & S_IFDIR)) return -EPERM;
+        int accessRet = access(bufferFolder, R_OK | W_OK);
+        if (accessRet) return -EPERM;
+    } else
+     if (mkdir(bufferFolder, S_IRWXU | S_IRWXG | S_IRWXO)) return -EPERM;
 
     {
         if (find) {
@@ -84,7 +92,6 @@ int PSStatus::work(string path, int typeNo) {
                 w = conf->absoluteW, h = conf->absoluteH;
             else
                 w = conf->ratioW * img->width, h = conf->ratioH * img->height;
-            cerr << "```ScalingWH" << " " << w << " " << h << endl;
             if ((w * h <= 0) || (w >= 5000) || (h >= 5000)) return -1;
             ans = ImageEdit::bilinear(img, w, h);
             if (ans) {
