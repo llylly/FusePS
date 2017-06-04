@@ -49,8 +49,10 @@ int PSStatus::initBuffer(int *argc, char **argv[]) {
         if (!(buf.st_mode & S_IFDIR)) return -EPERM;
         int accessRet = access(bufferFolder, R_OK | W_OK);
         if (accessRet) return -EPERM;
-    } else
-     if (mkdir(bufferFolder, S_IRWXU | S_IRWXG | S_IRWXO)) return -EPERM;
+    } else {
+        if (mkdir(bufferFolder, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+            return -EPERM;
+    }
 
     {
         if (find) {
